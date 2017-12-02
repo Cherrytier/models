@@ -1,0 +1,44 @@
+item {
+  id: 1
+  name: 'Harbin Wheat 330ML Can'
+}
+
+item {
+  id: 2
+  name: 'Budweiser Beer 330ML Can'
+}
+
+item {
+  id: 3
+  name: 'Budweiser 600ML Bottle'
+}
+
+item {
+  id: 4
+  name: 'Budweiser Beer 500ML Can'
+}
+
+item {
+  id: 5
+  name: 'budweiser15'
+}
+
+item {
+  id: 6
+  name: 'budweiser31'
+}
+
+item {
+  id: 7
+  name: 'budweiser30'
+}
+
+item {
+  id: 8
+  name: 'harbin26'
+}
+
+item {
+  id: 9
+  name: 'budweiser26'
+}
