@@ -1,5 +1,4 @@
 import xml.etree.ElementTree as ET
-import numpy as np
 import cv2
 import os
 
@@ -112,21 +111,28 @@ class ImageCropper(object):
                                   x, y)))
 
     def _write_image(self, image, objects, file_name):
-        if not os.path.exists(self.output_root):
-            os.makedirs(self.output_root)
         cv2.imwrite(file_name + '.jpg', image)
         root = ET.Element('annotation')
-        size = ET.SubElement(root, 'size')
+
         src_img = ET.SubElement(root, 'src_img')
         src_img.text = self.image_path
         xml_path = ET.SubElement(root, 'xml_path')
         xml_path.text = self.xml_path
+
+        size = ET.SubElement(root, 'size')
+
+        src_height = ET.SubElement(self.image.shape[0], 'src_height')
+        src_height.text = str(self.cropped_size[1])
+        src_width = ET.SubElement(self.image.shape[1], 'src_width')
+        src_width.text = str(self.cropped_size[0])
+
         height = ET.SubElement(size, 'height')
         height.text = str(self.cropped_size[1])
         width = ET.SubElement(size, 'width')
         width.text = str(self.cropped_size[0])
         depth = ET.SubElement(size, 'depth')
         depth.text = '3'
+
         for ob in objects:
             ob_xml = ET.SubElement(root, 'object')
             name = ET.SubElement(ob_xml, 'name')

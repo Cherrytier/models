@@ -43,6 +43,8 @@ def read_file(root):
 
 def _process_all(lists, output_root):
     count = 0
+    if not os.path.exists(output_root):
+        os.makedirs(output_root)
     for paths in lists:
         print(paths)
         img_path, xml_path = paths.split('&!&')
