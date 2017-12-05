@@ -1,6 +1,7 @@
-from create_beer_lists import create_train_val_list
-from create_beer_lists import create_file_list
-from tools import ImageCropper
+from beer.crop_tools.create_lists import create_train_val_list
+from beer.crop_tools.create_lists import create_file_list
+from beer.crop_tools.tools import ImageCropper
+
 import os
 import argparse
 

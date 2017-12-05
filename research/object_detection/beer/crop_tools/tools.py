@@ -47,7 +47,7 @@ def _read_xml(file_path, image_size):
 
 class ImageCropper(object):
     """
-    crop the beer image dataset
+    crop_tools the beer image dataset
     """
 
     def __init__(self,
