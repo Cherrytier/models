@@ -61,7 +61,7 @@ def compute_average_precision(recalls, precisions, k):
     ap = 0.0
     for __i in range(1, k + 1):
         ap += precisions[__i] * (recalls[__i] - recalls[__i - 1])
-    return ap / k
+    return ap
 
 
 def compute_mean_average_precision(predictions, top_k=0):
@@ -71,14 +71,8 @@ def compute_mean_average_precision(predictions, top_k=0):
     if top_k > 0:
         assert top_k < predictions_.shape[0], 'top_k is larger than predictions !'
         end = top_k
-    true_num = np.sum(predictions_[:end, 1])
-    max_precision = []
-    precision = 0
-    recall = 0
-    pre_recall = -1
-    count_true = 0
-    for __i in range(end):
-        count_true += predictions_[__i, 1]
-        precision = count_true / (__i + 1)
-        pre_recall = recall
-        recall = count_true / true_num
+    precision, recall = get_recalls_and_precisions(predictions_)
+    aps = []
+    for __i in range(1, end + 1):
+        aps.append(compute_average_precision(precision, recall, __i))
+    return np.mean(aps)

@@ -69,7 +69,7 @@ class BeerDetector(object):
             if is_add:
                 filtered.append(ob)
         self.objects.clear()
-        self.objects = filtered[:]
+        self.objects = list(map(lambda x: list(x), filtered))
 
     def _eval(self):
         objects = self.src_img_info['objects']
@@ -131,7 +131,7 @@ class BeerDetector(object):
         plt.imshow(image)
         plt.title('prediction')
         if output_img != '':
-            plt.savefig(output_img)
+            plt.savefig(output_img, dpi=300)
         if is_show:
             plt.show()
         plt.close()

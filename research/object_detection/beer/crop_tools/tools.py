@@ -121,9 +121,9 @@ class ImageCropper(object):
 
         size = ET.SubElement(root, 'size')
 
-        src_height = ET.SubElement(self.image.shape[0], 'src_height')
+        src_height = ET.SubElement(root, 'src_height')
         src_height.text = str(self.cropped_size[1])
-        src_width = ET.SubElement(self.image.shape[1], 'src_width')
+        src_width = ET.SubElement(root, 'src_width')
         src_width.text = str(self.cropped_size[0])
 
         height = ET.SubElement(size, 'height')

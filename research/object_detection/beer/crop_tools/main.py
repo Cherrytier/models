@@ -50,6 +50,8 @@ def process_all(lists, output_root):
         img_path, xml_path = paths.split('&!&')
         out_root = os.path.join(output_root, '{:04}'.format(count // 1000),
                                 '{:08}'.format(count))
+        if not os.path.exists(out_root):
+            os.makedirs(out_root)
         cropper = ImageCropper(img_path, xml_path, out_root)
         cropper.update(output_root + '/break.txt')
 

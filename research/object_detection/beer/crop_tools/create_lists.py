@@ -104,11 +104,12 @@ def create_train_val_list(data_root, output_root):
     return lists, sets
 
 
-def create_file_list(data_root, output_file):
+def create_file_list(data_root, output_file=''):
     lists = []
     sets = {}
     lists, sets = _traverse_file(data_root, lists, sets)
-    write_file(output_file, lists)
+    if output_file != '':
+        write_file(output_file, lists)
     return lists, sets
 
 
