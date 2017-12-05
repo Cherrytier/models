@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import os
 from PIL import Image
+import matplotlib.pyplot as plt
 
 from utils import label_map_util
 from utils import visualization_utils as vis_util
@@ -15,7 +16,7 @@ class BeerDetector(object):
     a detection tool class
     """
 
-    def __init__(self, images, info, src_img_info, pd_file, use_gpu=True):
+    def __init__(self, pd_file, use_gpu=True):
         assert isinstance(pd_file, str)
         self.detection_graph = tf.Graph()
         with self.detection_graph.as_default():
@@ -27,31 +28,29 @@ class BeerDetector(object):
 
         self.config = tf.ConfigProto()
         self.config.gpu_options.allow_growth = use_gpu
-        self.src_img_info = src_img_info
-        self.images = images
-        self.info = info
+        self.src_img_info = None
+        self.images = None
         self.objects = []
-        self.results = []
 
     def _process(self, boxes, scores, classes, index):
         boxes = np.squeeze(boxes)
         scores = np.squeeze(scores)
         classes = np.squeeze(classes).astype(np.int32)
         src_h, src_w = self.src_img_info['shape']
-        h, w = self.info['shape']
+        h, w = self.src_img_info['crop_shape']
         idx_x, idx_y = int(index.split('_')[0]), int(index.split('_')[1])
         for box, score, _class in zip(boxes, scores, classes):
-            xmin = round(box[0] * w) + idx_x
-            ymin = round(box[1] * h) + idx_y
-            xmax = round(box[2] * w) + idx_x
-            ymax = round(box[3] * h) + idx_y
-            if (xmax >= src_w) or (ymax >= src_h):
+            xmin = (round(box[0] * w) + idx_x) / src_w
+            ymin = (round(box[1] * h) + idx_y) / src_h
+            xmax = (round(box[2] * w) + idx_x) / src_w
+            ymax = (round(box[3] * h) + idx_y) / src_h
+            if (xmax >= 1.0) or (ymax >= 1.0):
                 continue
             self.objects.append([_class, xmin, ymin, xmax, ymax, score])
 
     def _merge(self):
-        self.objects = np.array(self.objects)
-        self.objects = list(self.objects[np.lexsort(self.objects.T)])
+        objects = np.array(self.objects)
+        self.objects = list(objects[np.lexsort(objects.T)])[:]
         filtered = []
         for ob in self.objects:
             is_add = True
@@ -69,7 +68,8 @@ class BeerDetector(object):
                         break
             if is_add:
                 filtered.append(ob)
-        self.objects = filtered
+        self.objects.clear()
+        self.objects = filtered[:]
 
     def _eval(self):
         objects = self.src_img_info['objects']
@@ -83,15 +83,58 @@ class BeerDetector(object):
             if len(ob) == 6:
                 ob.append(False)
 
-    def visualize(self, labels=[], output_img=''):
-        src_h, src_w = self.src_img_info['shape']
+    def visualize(self, labels, output_img='', is_show=False):
+        if isinstance(labels, str):
+            label_map = label_map_util.load_labelmap(labels)
+            categories = label_map_util.convert_label_map_to_categories(
+                label_map, max_num_classes=9, use_display_name=True)
+            category_index = label_map_util.create_category_index(categories)
+        else:
+            category_index = labels
         src_objects = self.src_img_info['objects']
+        src_image = self.src_img_info['image']
+        image = src_image[:]
         classes = []
         scores = []
         boxes = []
-        number = len(self.objects)
+        for ob in src_objects:
+            classes.append(ob[0])
+            boxes.append(ob[1:])
+            scores.append(1)
+        vis_util.visualize_boxes_and_labels_on_image_array(
+            src_image,
+            np.squeeze(boxes),
+            np.squeeze(classes).astype(np.int32),
+            np.squeeze(scores),
+            category_index,
+            use_normalized_coordinates=True,
+            line_thickness=8)
+        plt.subplots(121)
+        plt.imshow(src_image)
+        plt.title('ground true')
+        classes.clear()
+        boxes.clear()
+        scores.clear()
         for ob in self.objects:
-
+            classes.append(ob[0])
+            boxes.append(ob[1:-2])
+            scores.append(ob[-2])
+        vis_util.visualize_boxes_and_labels_on_image_array(
+            image,
+            np.squeeze(boxes),
+            np.squeeze(classes).astype(np.int32),
+            np.squeeze(scores),
+            category_index,
+            use_normalized_coordinates=True,
+            line_thickness=8)
+        plt.subplots(122)
+        plt.imshow(image)
+        plt.title('prediction')
+        if output_img != '':
+            plt.savefig(output_img)
+        if is_show:
+            plt.show()
+        plt.close()
 
     def _detect(self, image_list):
         with self.detection_graph.as_default():
@@ -110,7 +153,10 @@ class BeerDetector(object):
                                                          feed_dict={image_tensor: image_np_expanded})
                     self._process(boxes, scores, classes, os.path.basename(image_).split('.')[0])
 
-    def detect_images(self):
+    def detect_images(self, images, src_img_info):
+        self.src_img_info = src_img_info
+        self.images = images
+        self.objects.clear()
         if isinstance(self.images, np.ndarray):
             self._detect([self.images])
         elif isinstance(self.images, list):
@@ -118,6 +164,7 @@ class BeerDetector(object):
         else:
             raise TypeError('please input correct image !')
         self._merge()
+        self._eval()
 
     def get_result(self):
-        return self.results
+        return self.objects

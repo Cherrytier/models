@@ -18,9 +18,9 @@ def write_file(file_path, file_list1, file_list2=None):
 
 
 def _get_file_name(filename):
-    (_, tempfilename) = os.path.split(filename)
-    (shotname, _) = os.path.splitext(tempfilename)
-    return shotname
+    (_, temp_filename) = os.path.split(filename)
+    (shot_name, _) = os.path.splitext(temp_filename)
+    return shot_name
 
 
 def _merge_dict(dict1, dict2):

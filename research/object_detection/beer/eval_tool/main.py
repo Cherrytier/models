@@ -1,72 +1,31 @@
-import time
-import tensorflow as tf
-import numpy as np
-from PIL import Image
-from matplotlib import pyplot as plt
+import os
 
-from utils import label_map_util
-from utils import visualization_utils as vis_util
-
-from beer.eval_tool.tools import read_xml_as_eval_info
+from beer.eval_tool.tools import read_img_xml_as_eval_info
+from beer.eval_tool.detector import BeerDetector
+from beer.crop_tools.create_lists import create_file_list
+from beer.crop_tools.tools import ImageCropper
 
 
-def eval_large_image(image_path, detection_graph, category_index, use_gpu=True):
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-
-    with detection_graph.as_default():
-        with tf.Session(graph=detection_graph, config=config) as sess:
-            start_time = time.time()
-            print(time.ctime())
-            image = Image.open(PATH_TEST_IMAGE)
-            image_np = np.array(image).astype(np.uint8)
-            image_np_expanded = np.expand_dims(image_np, axis=0)
-            image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
-            boxes = detection_graph.get_tensor_by_name('detection_boxes:0')
-            scores = detection_graph.get_tensor_by_name('detection_scores:0')
-            classes = detection_graph.get_tensor_by_name('detection_classes:0')
-            num_detections = detection_graph.get_tensor_by_name('num_detections:0')
-            (boxes, scores, classes, num_detections) = sess.run(
-                [boxes, scores, classes, num_detections],
-                feed_dict={
-                    image_tensor: image_np_expanded
-                })
-            print('{} elapsed time: {:.3f}s'.format(time.ctime(),
-                                                    time.time() - start_time))
-            vis_util.visualize_boxes_and_labels_on_image_array(
-                image_np,
-                np.squeeze(boxes),
-                np.squeeze(classes).astype(np.int32),
-                np.squeeze(scores),
-                category_index,
-                use_normalized_coordinates=True,
-                line_thickness=8)
-            plt.figure(figsize=IMAGE_SIZE)
-            plt.imshow(image_np)
-            pic = Image.fromarray(image_np)
-            pic.show()
-
-
-def init_detector():
-    label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
-    categories = label_map_util.convert_label_map_to_categories(
-        label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
-    category_index = label_map_util.create_category_index(categories)
-
-    detection_graph = tf.Graph()
-    with detection_graph.as_default():
-        od_graph_def = tf.GraphDef()
-        with tf.gfile.GFile(PATH_TO_CKPT, 'rb') as fid:
-            serialized_graph = fid.read()
-            od_graph_def.ParseFromString(serialized_graph)
-            tf.import_graph_def(od_graph_def, name='')
-
-
-PATH_TEST_IMAGE = '/home/admins/cmake/mxnet-yolo/data/beer/crop_tools/train/0006/00006838/480_720.jpg'
-PATH_TO_CKPT = '/home/admins/cmake/models/research/object_detection/data/ssd_mobilenet_v1_coco_11_06_2017/0/frozen_inference_graph.pb'
-PATH_TO_LABELS = '/home/admins/cmake/models/research/object_detection/data/beer_label_map.pbtxt'
-NUM_CLASSES = 20
-IMAGE_SIZE = (18, 12)
-
+def process_all(lists, output_root, pd_file):
+    if not os.path.exists(output_root):
+        os.makedirs(output_root)
+    detector = BeerDetector(pd_file)
+    objects = []
+    for count, paths in enumerate(lists):
+        print(paths)
+        img_path, xml_path = paths.split('&!&')
+        info = read_img_xml_as_eval_info(img_path, xml_path)
+        info['crop_shape'] = (416, 416)
+        out_root = os.path.join(output_root, '{:04}'.format(count // 1000),
+                                '{:08}'.format(count))
+        out_file_root = os.path.join(output_root, '{:04}'.format(count // 1000))
+        cropper = ImageCropper(img_path, xml_path, out_root)
+        cropper.update(output_root + '/break.txt')
+        images, _ = create_file_list(out_root, out_file_root + '/img.txt')
+        img_list = list(map(lambda x: x.split('&!&')[0], images))
+        detector.detect_images(img_list, info)
+        objects += detector.get_result()
+        detector.visualize()
+    return objects
 
 
