@@ -30,7 +30,7 @@ def read_img_xml_as_eval_info(img_path, xml_path):
         ymax = int(xml_box.find('ymax').text) / height
         objects.append([class_names.index(cls_name), xmin, ymin, xmax, ymax])
     info['objects'] = objects
-    info['image'] = cv2.imread(img_path)
+    # info['image'] = cv2.imread(img_path)
     return info
 
 
