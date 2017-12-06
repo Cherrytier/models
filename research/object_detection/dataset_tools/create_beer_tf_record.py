@@ -157,9 +157,6 @@ def main(_):
         img_path, xml_path = example.split('&!&')
         tf_example = dict_to_tf_example(xml_path, img_path, label_map_dict)
         writer.write(tf_example.SerializeToString())
-        if idx >= 10000:
-            break
-
     writer.close()
 
 

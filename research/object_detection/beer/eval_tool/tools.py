@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
-from sklearn.metrics import recall_score
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import average_precision_score
 import xml.etree.ElementTree as ET
 
 
@@ -47,23 +46,6 @@ def get_overlap_area(rect1, rect2):
     return (xmax - xmin) * (ymax - ymin)
 
 
-def get_recalls_and_precisions(predictions):
-    ground_true = np.ones((len(predictions),))
-    recalls = []
-    precisions = []
-    for __i in range(1, len(predictions) + 1):
-        recalls.append(recall_score(ground_true[:__i], predictions[:__i]))
-        precisions.append(accuracy_score(ground_true[:__i], predictions[:__i]))
-    return recalls, precisions
-
-
-def compute_average_precision(recalls, precisions, k):
-    ap = 0.0
-    for __i in range(1, k + 1):
-        ap += precisions[__i] * (recalls[__i] - recalls[__i - 1])
-    return ap
-
-
 def compute_mean_average_precision(predictions, top_k=0):
     predictions_ = np.array(predictions)
     predictions_ = predictions_[np.lexsort(predictions_[:, ::-1].T)][:]
@@ -71,8 +53,17 @@ def compute_mean_average_precision(predictions, top_k=0):
     if top_k > 0:
         assert top_k < predictions_.shape[0], 'top_k is larger than predictions !'
         end = top_k
-    precision, recall = get_recalls_and_precisions(predictions_)
+    ground_true = np.where(predictions > 0.5, 1, 0)
     aps = []
     for __i in range(1, end + 1):
-        aps.append(compute_average_precision(precision, recall, __i))
+        _aps = average_precision_score(ground_true[:__i, 0], predictions_[:__i, 0])
+        aps.append(_aps)
     return np.mean(aps)
+
+
+if __name__ == '__main__':
+    pre = np.random.rand(4, 2)
+    pre = np.where(pre > 0.95, 0.95, pre)
+    pre = np.where(pre < 0.05, 0.05, pre)
+    print(pre)
+    print(compute_mean_average_precision(pre))
