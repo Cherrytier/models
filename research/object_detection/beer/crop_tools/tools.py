@@ -142,8 +142,8 @@ class ImageListCropper(SubImageCropper):
                  stride=(104, 104),
                  threshold=0.8):
         super(ImageListCropper, self).__init__(image_path,
-                                           cropped_size,
-                                           stride)
+                                               cropped_size,
+                                               stride)
         self._image_path = image_path
         self._xml_path = xml_path
         self._output_root = output_root
