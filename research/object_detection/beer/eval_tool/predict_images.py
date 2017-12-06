@@ -15,12 +15,14 @@ OUTPUT_ROOT = os.path.join(IMAGE_ROOT, 'pre')
 PATH_TO_CKPT = '/home/admins/cmake/ssd_mobilenet_v1_coco_11_06_2017/test/frozen_inference_graph.pb'
 PATH_TO_LABELS = '/home/admins/cmake/models/research/object_detection/data/beer_label_map.pbtxt'
 NUM_CLASSES = 9
-
-label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
+print('ssssssssssssss')
+label_map = label_map_util.load_labelmap(r'D:\workspace\py\models\research\object_detection\data\beer_label_map.pbtxt')
 categories = label_map_util.convert_label_map_to_categories(
     label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
 category_index = label_map_util.create_category_index(categories)
-
+print(type(category_index))
+print(category_index)
+input()
 detection_graph = tf.Graph()
 with detection_graph.as_default():
     od_graph_def = tf.GraphDef()

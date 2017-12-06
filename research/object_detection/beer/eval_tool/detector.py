@@ -11,6 +11,14 @@ from beer.eval_tool.tools import is_overlap
 from beer.eval_tool.tools import get_overlap_area
 
 
+class Detector(object):
+    """
+    detect image and put the output data to a func
+    """
+    def __init__(self, pd_file, labels):
+        pass
+
+
 class BeerDetector(object):
     """
     a detection tool class

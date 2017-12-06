@@ -1,6 +1,6 @@
 from beer.crop_tools.create_lists import create_train_val_list
 from beer.crop_tools.create_lists import create_file_list
-from beer.crop_tools.tools import ImageCropper
+from beer.crop_tools.tools import ImageListCropper
 
 import os
 import argparse
@@ -52,7 +52,7 @@ def process_all(lists, output_root):
                                 '{:08}'.format(count))
         if not os.path.exists(out_root):
             os.makedirs(out_root)
-        cropper = ImageCropper(img_path, xml_path, out_root)
+        cropper = ImageListCropper(img_path, xml_path, out_root)
         cropper.update(output_root + '/break.txt')
 
 
