@@ -14,10 +14,15 @@ from beer.eval_tool.tools import is_overlap
 from beer.eval_tool.tools import get_overlap_area
 from beer.file_tool.txt_file import read_file
 
+
+SCORE = 0.15
+PERCENT = 0.75
 IMAGE_ROOT = '/home/admins/data/beer_data'
 # image_lists, _ = create_file_list(os.path.join(IMAGE_ROOT, 'crop', 'val'), os.path.join(IMAGE_ROOT, 'pre.txt'))
 image_lists = read_file(os.path.join(IMAGE_ROOT, 'pre.txt'))
-OUTPUT_ROOT = os.path.join(IMAGE_ROOT, 'pre')
+if not os.path.exists(os.path.join(IMAGE_ROOT, 'pre{}-{}'.format(SCORE, PERCENT))):
+    os.makedirs(os.path.join(IMAGE_ROOT, 'pre{}-{}'.format(SCORE, PERCENT)))
+OUTPUT_ROOT = os.path.join(IMAGE_ROOT, 'pre{}-{}'.format(SCORE, PERCENT))
 PATH_TO_CKPT = '/home/admins/cmake/ssd_mobilenet_v1_coco_11_06_2017/test/frozen_inference_graph.pb'
 PATH_TO_LABELS = '/home/admins/cmake/models/research/object_detection/data/beer_label_map.pbtxt'
 NUM_CLASSES = 9
@@ -34,12 +39,12 @@ def eval_single(_classes, _boxes, _scores, info_):
     _gt_num = len(objects_)
     _true_pre = 0
     for cls, box, score in zip(_classes, _boxes, _scores):
-        if score > 0.5:
+        if score > SCORE:
             for _ob in objects_:
                 if not is_overlap([box[1], box[0], box[3], box[2]], _ob[1:]):
                     src_area = min((box[2] - box[0]) * (box[3] - box[1]), (_ob[3] - _ob[1]) * (_ob[4] - _ob[2]))
                     area = get_overlap_area([box[1], box[0], box[3], box[2]], _ob[1:])
-                    if (area / src_area > 0.75) and (cls == (_ob[0] + 1)):
+                    if (area / src_area > PERCENT) and (cls == (_ob[0] + 1)):
                         _true_pre += 1
                         _pre_objects.append([cls, *box, score])
                     break
@@ -137,18 +142,19 @@ with detection_graph.as_default():
             pic = Image.fromarray(image_np)
             pic.save(os.path.join(OUTPUT_ROOT, '{}.jpg'.format(idx)))
             gt_num, true_pre, pre_objects = eval_single(classes, boxes, scores, info)
-            with open(os.path.join(IMAGE_ROOT, 'gt_pre.txt'), 'a') as txt_file:
+            with open(os.path.join(IMAGE_ROOT, 'gt_pre{}-{}.txt'.format(SCORE, PERCENT)), 'a') as txt_file:
                 print('{} {} {}'.format(idx, gt_num, true_pre), file=txt_file)
             write_pre_xml(info, pre_objects, '{}.xml'.format(idx))
             print('{} elapsed time: {:.3f}s'.format(time.ctime(),
                                                     time.time() - start_time))
 
-result_list = read_file(os.path.join(IMAGE_ROOT, 'gt_pre.txt'))
+result_list = read_file(os.path.join(IMAGE_ROOT, 'gt_pre{}-{}.txt'.format(SCORE, PERCENT)))
 TOTAL = 0
 TRUE_PRE = 0
 for result in result_list:
     idx, _gt_num, _pre = result.split(' ')
     TOTAL += int(_gt_num)
     TRUE_PRE += int(_pre)
-
+print(TOTAL)
+print(TRUE_PRE)
 print(TRUE_PRE / TOTAL)
