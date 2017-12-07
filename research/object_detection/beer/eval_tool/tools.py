@@ -9,10 +9,10 @@ def read_img_xml_as_eval_info(img_path, xml_path):
     root = tree.getroot()
     size = root.find('size')
     class_names = [
-        'Budweiser 600ML Bottle', 'Harbin Wheat 330ML Can',
-        'budweiser15', 'Budweiser Beer 500ML Can', 'harbin26',
-        'budweiser26', 'Budweiser Beer 330ML Can', 'budweiser31',
-        'budweiser30'
+        'Harbin Wheat 330ML Can', 'Budweiser Beer 330ML Can',
+        'Budweiser 600ML Bottle', 'Budweiser Beer 500ML Can', 'budweiser15',
+        'budweiser31', 'budweiser30', 'harbin26',
+        'budweiser26'
     ]
     info = {}
     width = int(size.find('width').text)
