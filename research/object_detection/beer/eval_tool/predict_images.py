@@ -131,3 +131,4 @@ with detection_graph.as_default():
             write_pre_xml(info, pre_objects, '{}.xml'.format(idx))
             print('{} elapsed time: {:.3f}s'.format(time.ctime(),
                                                     time.time() - start_time))
+
