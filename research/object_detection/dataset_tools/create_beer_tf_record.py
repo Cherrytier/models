@@ -75,7 +75,6 @@ def dict_to_tf_example(xml_path, img_path, label_map_dict):
     """
     with tf.gfile.GFile(img_path, 'rb') as fid:
         encoded_jpg = fid.read()
-    encoded_jpg_io = io.BytesIO(encoded_jpg)
     key = hashlib.sha256(encoded_jpg).hexdigest()
     tree = ET.parse(xml_path)
     root = tree.getroot()
@@ -158,9 +157,6 @@ def main(_):
         img_path, xml_path = example.split('&!&')
         tf_example = dict_to_tf_example(xml_path, img_path, label_map_dict)
         writer.write(tf_example.SerializeToString())
-        if idx >= 10000:
-            break
-
     writer.close()
 
 
